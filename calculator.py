@@ -68,6 +68,8 @@ class Calculator:
         for symbol in self.symbols:
             symbol.classify_symbol(self.model, self.CATEGORIES, self.unprocessed_frame)
         
+    def calculate(self):
+        pass
 
     def draw(self):
         for symbol in self.symbols:

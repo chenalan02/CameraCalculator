@@ -11,25 +11,38 @@ class Symbol():
 
     def classify_symbol(self, model, classification_dict, webcam_img):
 
-        img_height = webcam_img.shape[0]
-        img_width = webcam_img.shape[1]
+        webcam_img_height = webcam_img.shape[0]
+        webcam_img_width = webcam_img.shape[1]
 
-        padding = self.h//3
+        if (self.h > self.w):
+            padding = self.h//3
+        else:
+            padding = self.w//3
+
         left_bound = self.x - padding
+        right_bound = self.x + self.w + padding
+        top_bound = self.y - padding
+        bottom_bound = self.y + self.h + padding
+
+        width = right_bound - left_bound
+        height = bottom_bound - top_bound
+        dim_difference = abs(width - height)
+
+        if (width > height):
+            top_bound -= dim_difference//2
+            bottom_bound += dim_difference//2
+        else:
+            left_bound -= dim_difference//2
+            right_bound += dim_difference//2
+
         if (left_bound < 0):
             left_bound = 0
-
-        right_bound = self.x + self.w + padding
-        if (right_bound >= img_width):
-            right_bound = img_width - 1
-
-        top_bound = self.y - padding
+        if (right_bound >= webcam_img_width):
+            right_bound = webcam_img_width - 1
         if (top_bound < 0):
             top_bound = 0
-
-        bottom_bound = self.y + self.h + padding
-        if (bottom_bound > img_height):
-            bottom_bound = img_height - 1
+        if (bottom_bound > webcam_img_height):
+            bottom_bound = webcam_img_height - 1
 
         img = webcam_img[top_bound:bottom_bound, left_bound:right_bound]
 
