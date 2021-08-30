@@ -2,26 +2,29 @@ from symbol import Symbol
 import time
 import cv2
 import numpy as np
+import copy
 
 
 class Calculator:
     def __init__(self, model, categories, time_to_focus):
-        self.symbols = []
-        self.num_symbols = 0
-        self.max_displacement = 25
-        self.time_since_symbols_change = 0.0
         self.time_to_focus = time_to_focus
-        self.calculate = False
-        self.answer = ""
         self.model = model
         self.CATEGORIES = categories
+        self.max_displacement = 25
 
+        self.symbols = []
+        self.num_symbols = -1
+        
+        self.time_num_symbols_changed = 0.0
+        self.calculate = False
+        self.answer = ""
+        
         self.cap = cv2.VideoCapture(0)
         _, frame = self.cap.read()
         frame_shape = frame.shape
-        self.height = frame_shape[0]
-        self.width = frame_shape[1]
-        self.unprocessed_frame = np.zeros((self.height, self.width))
+        height = frame_shape[0]
+        width = frame_shape[1]
+        self.unprocessed_frame = np.zeros((height, width))
 
     def update_bounding_boxes(self):
 
@@ -34,6 +37,7 @@ class Calculator:
         elif (time.time() - self.time_num_symbols_changed > self.time_to_focus and self.calculate == False):
             self.calculate = True
             self.classify_symbols()
+            #self.calculate_equation()
         
         if (self.calculate):
             for new_symbol in new_symbols:
@@ -68,9 +72,40 @@ class Calculator:
         for symbol in self.symbols:
             symbol.classify_symbol(self.model, self.CATEGORIES, self.unprocessed_frame)
         
-    def calculate(self):
-        pass
+    def calculate_equation(self):
+        self.symbols.sort(key = lambda symbol:symbol.x, reverse= True)
+        symbols_stack = []
+        for symbol in self.symbols:
+            symbols_stack.append(symbol.classification)
+        
+        operations_stack = []
+        number = ""
+        while (len(symbols_stack) != 0):
+            digit = symbols_stack.pop()
+            if (digit not in ['add','div','mul','sub']):
+                number += digit
+            else:
+                operations_stack.insert(0, number)
+                number = ""
+        
+        while (len(operations_stack) > 1):
+            num1 = float(operations_stack.pop())
+            operation = operations_stack.pop()
+            num2 = float(operations_stack.pop())
 
+            if (operation == 'add'):
+                result = num1 + num2
+            elif (operation == 'div'):
+                result = num1 / num2
+            elif (operation == 'mul'):
+                result = num1 * num2
+            else:
+                result = num1 - num2
+
+            operations_stack.append(result)
+
+        self.answer = operations_stack[0]
+        
     def draw(self):
         for symbol in self.symbols:
             symbol.draw_rect(self.unprocessed_frame)
