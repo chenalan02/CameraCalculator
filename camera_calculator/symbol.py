@@ -61,4 +61,4 @@ class Symbol():
 
     def draw_classification(self, img):
         if (self.classification != None):
-            cv2.putText(img, str(self.classification), (self.x, self.y), cv2.FONT_HERSHEY_DUPLEX, 2, (0, 255, 255), 3)
+            cv2.putText(img, str(self.classification), (self.x, self.y), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 255), 2)

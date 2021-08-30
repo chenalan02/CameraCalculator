@@ -10,10 +10,9 @@ class Calculator:
         self.time_to_focus = time_to_focus
         self.model = model
         self.CATEGORIES = categories
-        self.max_displacement = 25
+        self.max_displacement = 35
 
-        self.symbols = []
-        self.num_symbols = -1
+        self.symbols = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         
         self.time_num_symbols_changed = 0.0
         self.calculate = False
@@ -33,11 +32,17 @@ class Calculator:
         if (len(new_symbols) != len(self.symbols)):
             self.time_num_symbols_changed = time.time()
             self.calculate = False
+            self.answer = ""
 
         elif (time.time() - self.time_num_symbols_changed > self.time_to_focus and self.calculate == False):
             self.calculate = True
             self.classify_symbols()
-            #self.calculate_equation()
+            try:
+                self.calculate_equation()
+            except:
+                self.time_num_symbols_changed = time.time()
+                self.calculate = False
+                self.answer = ""
         
         if (self.calculate):
             for new_symbol in new_symbols:
@@ -62,7 +67,7 @@ class Calculator:
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
         for contour in contours:
             area = cv2.contourArea(contour)
-            if 30 < area < 5000:
+            if 15 < area < 5000:
                 x, y, w, h = cv2.boundingRect(contour)
                 new_symbols.append(Symbol(x, y, w, h))
         
@@ -86,8 +91,10 @@ class Calculator:
                 number += digit
             else:
                 operations_stack.insert(0, number)
+                operations_stack.insert(0, digit)
                 number = ""
-        
+        operations_stack.insert(0, number)
+
         while (len(operations_stack) > 1):
             num1 = float(operations_stack.pop())
             operation = operations_stack.pop()
@@ -110,4 +117,6 @@ class Calculator:
         for symbol in self.symbols:
             symbol.draw_rect(self.unprocessed_frame)
             symbol.draw_classification(self.unprocessed_frame)
+        if (self.answer != ""):
+            cv2.putText(self.unprocessed_frame, str(self.answer), (0,50), cv2.FONT_HERSHEY_DUPLEX, 2, (0, 255, 255), 3)
         cv2.imshow("webcam", self.unprocessed_frame)
