@@ -52,15 +52,15 @@ The Camera Calculator was implemented using objects to represent each symbol and
 `calculator.Symbol(model, categories, time_to_focus)`
 > The Calculator class represents the calculator as a whole and manages the tracking of symbols and calculations
 
-`self.model` - CNN model used to recognize symbols
-`self.CATEGORIES` - dictionary mapping of the symbol names from their integer encoding
-`self.time_to_focus` - number of seconds the calculator should wait once number of symbols stay constant before performing a calculation
-`self.max_displacement` - maximum pixels a symbol can move between consecutive frames to lose track of it
-`self.symbols` - list of all symbols
-`self.time_num_symbols_changed` - the last time that the number of symbols changed or a calculation failed 
-`self.calculate` - boolean for whether a calculation has been performed
-`self.answer` - the answer of the calculation
-`self.cap` - the camera used by the OpenCV Library to capture frames
+`self.model` - CNN model used to recognize symbols\
+`self.CATEGORIES` - dictionary mapping of the symbol names from their integer encoding\
+`self.time_to_focus` - number of seconds the calculator should wait once number of symbols stay constant before performing a calculation\
+`self.max_displacement` - maximum pixels a symbol can move between consecutive frames to lose track of it\
+`self.symbols` - list of all symbols\
+`self.time_num_symbols_changed` - the last time that the number of symbols changed or a calculation failed\
+`self.calculate` - boolean for whether a calculation has been performed\
+`self.answer` - the answer of the calculation\
+`self.cap` - the camera used by the OpenCV Library to capture frames\
 `self.unprocessed_frame` - the latest unprocessed frame captured by the webcam
 
 `def update_symbols(self)`
