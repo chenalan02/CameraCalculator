@@ -1,5 +1,5 @@
 # RealTimeCameraCalculator
-A Camera that can calculate written math calculations in real time, including multiple operations and decimals. Once the number of detected symbols(numbers, operations, decimals) on screen doesnt change for a specified number of seconds, a calculation is performed. The answer, symbol classifications, and bounding boxes stays on screen and follows the symbols until the number of detected symbols change.
+A Camera that can calculate written math calculations in real time, including multiple operations and decimals. The calculation doesn't follow bedmas/pemdas rules. Once the number of detected symbols(numbers, operations, decimals) on screen doesn't change for a specified number of seconds, a calculation is performed. The answer, symbol classifications, and bounding boxes stays on screen and follows the symbols until the number of detected symbols change.
 
 Uses openCV to process the webcam image and retreive bounding boxes for each symbol (numbers, operations, decimals). Uses a tensorflow trained CNN model to identify each symbol. The identifier model was trained using a kaggle dataset found at https://www.kaggle.com/sagyamthapa/handwritten-math-symbols. 
 
@@ -85,3 +85,8 @@ The Camera Calculator was implemented using objects to represent each symbol and
 
 `def draw(self)`
 * draw the bounding boxes, and classification/answer if applicable, to the webcam image
+
+##Limitation and Future Improvements
+The Camera Calculator sometimes struggles to classify symbols when they are close to each other. This is due to the fact that the recognizer model is fed a cropped squared image with a small scaled padding to avoid distortions when resizing. As a result, there is sometimes noise from neighboring symbols which the model does not handle well. A solution could be to retrain the model with images with added noise. Another solution could be retrain the model using generated images with large distortions. This was, we can avoid squaring the image and simple take the bounding box of the symbol and resize it without worrying about the model not being able to recognize distorted images.
+
+When the calculator performs a calculation, there is a slight lag in the program of about half a second since the calculator has to classify all images during that frame. I probably did not need such a large CNN for recognizing symbols and could have decreased the number of parameters and layers to achieve quicker performance.
