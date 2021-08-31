@@ -4,8 +4,8 @@ A Camera that can calculate written math calculations in real time, including mu
 Uses openCV to process the webcam image and retreive bounding boxes for each symbol (numbers, operations, decimals). Uses a tensorflow trained CNN model to identify each symbol. The identifier model was trained using a kaggle dataset found at https://www.kaggle.com/sagyamthapa/handwritten-math-symbols. 
 
 <p float="left">
-  <img src="https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/Screenshot%202021-08-30%20212950.png" width = 480/>
-  <img src="https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/Screenshot%202021-08-30%20180311.png" width = 480/> 
+  <img src="https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/Screenshot%202021-08-30%20212950.png" width = 400/>
+  <img src="https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/Screenshot%202021-08-30%20180311.png" width = 400/> 
 </p>
 
 ## Training the Identifier Model
@@ -14,8 +14,8 @@ The model was able to reach an accuracy of >90% accuracy within 5 epochs but slo
 
 
 <p float="left">
-  <img src="https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/acc.png" width = 480/>
-  <img src="https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/loss.png" width = 480/> 
+  <img src="https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/acc.png" width = 400/>
+  <img src="https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/loss.png" width = 400/> 
 </p>
 
 ![Confusion Matrix](https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/confusion%20matrix.png)
