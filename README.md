@@ -1,7 +1,7 @@
 # RealTimeCameraCalculator
 A Camera that can calculate written math calculations in real time, including multiple operations and decimals. The calculation doesn't follow bedmas/pemdas rules. Once the number of detected symbols(numbers, operations, decimals) on screen doesn't change for a specified number of seconds, a calculation is performed. The answer, symbol classifications, and bounding boxes stays on screen and follows the symbols until the number of detected symbols change.
 
-Uses openCV to process the webcam image and retreive bounding boxes for each symbol (numbers, operations, decimals). Uses a tensorflow trained CNN model to identify each symbol. The identifier model was trained using a kaggle dataset found at https://www.kaggle.com/sagyamthapa/handwritten-math-symbols. 
+Uses openCV to process the webcam image and retrieve bounding boxes for each symbol (numbers, operations, decimals). Uses a tensorflow trained CNN model to identify each symbol. The identifier model was trained using a kaggle dataset found at https://www.kaggle.com/sagyamthapa/handwritten-math-symbols. 
 
 Multiple Operations            |  Decimal Numbers
 :-------------------------:|:-------------------------:
