@@ -4,20 +4,32 @@ import cv2
 import numpy as np
 import copy
 
-
+#calculator class which holds information about the math symbols
 class Calculator:
     def __init__(self, model, categories, time_to_focus):
-        self.time_to_focus = time_to_focus
+        
         self.model = model
         self.CATEGORIES = categories
+
+        #time the calculator wait once the number of symbols stay the same before calculating the equation
+        self.time_to_focus = time_to_focus
+        #maximum pixels a symbol can move between consecutive frames to lose track of it
         self.max_displacement = 25
 
+        #list of all symbols (numbers, decimals, operations)
+        #set to large initial length so the calculator doesnt try to perform a calculation on the first frame in update_symbols()
         self.symbols = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        
+
+        #the last time when the number of symbols changed
         self.time_num_symbols_changed = 0.0
+
+        #variable for whether the calculator has performed a calculation
         self.calculate = False
+
+        #answer of the calculation
         self.answer = ""
         
+        #captures a frame to initialize a black frame of the same dimensions
         self.cap = cv2.VideoCapture(0)
         _, frame = self.cap.read()
         frame_shape = frame.shape
@@ -25,66 +37,86 @@ class Calculator:
         width = frame_shape[1]
         self.unprocessed_frame = np.zeros((height, width))
 
+    #updates the symbols, determines whether a calculation should be made, and keeps track of symbols from previous frames
     def update_symbols(self):
 
-        new_symbols = self.process_bounding_boxes()
+        #retreives symbols from newest frame
+        new_symbols = self.process_symbols()
 
+        #if the numbers of symbols have changed, update the time of last change and set calculate to false
         if (len(new_symbols) != len(self.symbols)):
             self.time_num_symbols_changed = time.time()
             self.calculate = False
             self.answer = ""
 
+        #if it has been a set number of seconds since the last change in symbols, classify them and calculate the equation if applicable
         elif (time.time() - self.time_num_symbols_changed > self.time_to_focus and self.calculate == False):
             self.calculate = True
             self.classify_symbols()
 
+            #if the symbols do not create a valid equation, update the time of last change and set calculate to false
             try:
                 self.calculate_equation()
             except:
                 self.time_num_symbols_changed = time.time()
-                #self.calculate = False
+                self.calculate = False
                 self.answer = ""
 
+        #if calculate is true, track the position of the symbols from the previous frame in terms of proximity to keep classifications
         if (self.calculate):
             for new_symbol in new_symbols:
                 for old_symbol in self.symbols:
                     if (self.is_same_symbol(old_symbol, new_symbol)):
                         new_symbol.classification = old_symbol.classification
                         break
+        #update symbols
         self.symbols = new_symbols
 
+    #determines if 2 symbols from consecutive frames are the same if they are within a specified number of pixels apart
     def is_same_symbol(self, symbol1, symbol2):
         if (abs(symbol1.x - symbol2.x) < self.max_displacement and abs(symbol1.y - symbol2.y) < self.max_displacement):
             return True
 
-    def process_bounding_boxes(self):
+    #processing the symbols of a frame
+    def process_symbols(self):
 
+        #decrease effects of noise by applying a gaussian blur and mask
         _, self.unprocessed_frame = self.cap.read()
         frame = cv2.cvtColor(self.unprocessed_frame, cv2.COLOR_BGR2GRAY)
         frame = cv2.GaussianBlur(frame, (15, 15), 0)
         _, mask = cv2.threshold(frame, 80, 255, cv2.THRESH_BINARY_INV)
 
         new_symbols = []
+        #detect symbols by finding contours
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
         for contour in contours:
+            #add a symbol if its contour is within a specific area range
             area = cv2.contourArea(contour)
             if 20 < area < 5000:
                 x, y, w, h = cv2.boundingRect(contour)
                 new_symbols.append(Symbol(x, y, w, h))
-        
+    
         return new_symbols
         
+    #classify all symbols
     def classify_symbols(self):
         for symbol in self.symbols:
             symbol.classify_symbol(self.model, self.CATEGORIES, self.unprocessed_frame)
         
+    #calculates the equation ignoring bedmas/pemdas rules
+    #first concatenates numbers with decimals and/or multiple digits using symbols_stack as a container
+    #then performs math operations using operations_stack as a container
     def calculate_equation(self):
+
+        #sort the symbols in terms of x position from right to left to use as a stack and cleans division symbols
         self.symbols.sort(key = lambda symbol:symbol.x, reverse= True)
         self.clean_division_symbols()
         symbols_stack = []
         for symbol in self.symbols:
             symbols_stack.append(symbol.classification)
         
+        #receives symbols from symbols_stack, concatenating them to form a number until a operation is received
+        #once an operation is received, add both number and the operation to opeartions_stack and reset the number
         operations_stack = []
         number = ""
         while (len(symbols_stack) != 0):
@@ -95,8 +127,12 @@ class Calculator:
                 operations_stack.insert(0, number)
                 operations_stack.insert(0, digit)
                 number = ""
+        #add the last number of the equation once the stack is empty
         operations_stack.insert(0, number)
 
+        #operations_stack should now be in alternating order of numbers and operations
+        #perform the first operation at the top of the stack and append the result to the stack
+        #repeat until only a single number is left in the stack
         while (len(operations_stack) > 1):
             num1 = float(operations_stack.pop())
             operation = operations_stack.pop()
@@ -115,6 +151,11 @@ class Calculator:
 
         self.answer = operations_stack[0]
 
+    #cleans the divion symbols since they are usually detected as 3 separate symbols]
+    #the middle part of the division symbol should be recognized as a division symbol while the dots are recognized as decimals
+    #when this method is called, self.symbols has been sorted in reverse order of x position
+    #the divison symbol should be preceeded by the 2 symbols recognized as decimals, these are deleted from self.symbols
+
     def clean_division_symbols(self):
         for symbol in self.symbols:
             if (symbol.classification == 'div'):
@@ -123,9 +164,10 @@ class Calculator:
                 for dot in divison_dots:
                     self.symbols.remove(dot) 
         
+    #draw the bounding boxes, and classification/answer if applicable, to the webcam image
     def draw(self):
         for symbol in self.symbols:
-            symbol.draw_rect(self.unprocessed_frame)
+            symbol.draw_bounding_box(self.unprocessed_frame)
             symbol.draw_classification(self.unprocessed_frame)
         if (self.answer != ""):
             cv2.putText(self.unprocessed_frame, str(self.answer), (0,50), cv2.FONT_HERSHEY_DUPLEX, 2, (0, 255, 255), 3)
