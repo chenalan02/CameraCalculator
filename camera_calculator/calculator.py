@@ -10,7 +10,7 @@ class Calculator:
         self.time_to_focus = time_to_focus
         self.model = model
         self.CATEGORIES = categories
-        self.max_displacement = 35
+        self.max_displacement = 25
 
         self.symbols = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         
@@ -25,7 +25,7 @@ class Calculator:
         width = frame_shape[1]
         self.unprocessed_frame = np.zeros((height, width))
 
-    def update_bounding_boxes(self):
+    def update_symbols(self):
 
         new_symbols = self.process_bounding_boxes()
 
@@ -37,21 +37,22 @@ class Calculator:
         elif (time.time() - self.time_num_symbols_changed > self.time_to_focus and self.calculate == False):
             self.calculate = True
             self.classify_symbols()
+
             try:
                 self.calculate_equation()
             except:
                 self.time_num_symbols_changed = time.time()
-                self.calculate = False
+                #self.calculate = False
                 self.answer = ""
-        
+
         if (self.calculate):
             for new_symbol in new_symbols:
                 for old_symbol in self.symbols:
                     if (self.is_same_symbol(old_symbol, new_symbol)):
                         new_symbol.classification = old_symbol.classification
                         break
-        self.symbols = new_symbols                
-            
+        self.symbols = new_symbols
+
     def is_same_symbol(self, symbol1, symbol2):
         if (abs(symbol1.x - symbol2.x) < self.max_displacement and abs(symbol1.y - symbol2.y) < self.max_displacement):
             return True
@@ -67,7 +68,7 @@ class Calculator:
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
         for contour in contours:
             area = cv2.contourArea(contour)
-            if 15 < area < 5000:
+            if 20 < area < 5000:
                 x, y, w, h = cv2.boundingRect(contour)
                 new_symbols.append(Symbol(x, y, w, h))
         
@@ -79,6 +80,7 @@ class Calculator:
         
     def calculate_equation(self):
         self.symbols.sort(key = lambda symbol:symbol.x, reverse= True)
+        self.clean_division_symbols()
         symbols_stack = []
         for symbol in self.symbols:
             symbols_stack.append(symbol.classification)
@@ -112,6 +114,14 @@ class Calculator:
             operations_stack.append(result)
 
         self.answer = operations_stack[0]
+
+    def clean_division_symbols(self):
+        for symbol in self.symbols:
+            if (symbol.classification == 'div'):
+                div_index = self.symbols.index(symbol)
+                divison_dots = [self.symbols[div_index - 1], self.symbols[div_index - 2]]
+                for dot in divison_dots:
+                    self.symbols.remove(dot) 
         
     def draw(self):
         for symbol in self.symbols:

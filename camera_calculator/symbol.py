@@ -15,9 +15,9 @@ class Symbol():
         webcam_img_width = webcam_img.shape[1]
 
         if (self.h > self.w):
-            padding = self.h//3
+            padding = self.h//4
         else:
-            padding = self.w//3
+            padding = self.w//4
 
         left_bound = self.x - padding
         right_bound = self.x + self.w + padding

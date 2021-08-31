@@ -14,7 +14,7 @@ calculator = Calculator(model, CATEGORIES, 1.5)
 
 while True:
 
-    calculator.update_bounding_boxes()
+    calculator.update_symbols()
     calculator.draw()
 
     if cv2.waitKey(1) in [ord('q'), ord('Q')]:
