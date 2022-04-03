@@ -4,61 +4,63 @@ import numpy as np
 #symbol class which represents numbers, decimals, and operations
 class Symbol():
     #initialize with dimensions of bounding box
-    def __init__(self, x, y, w, h):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-        self.classification = None
-
-    #method to process a image of the symbol from the webcam image to classify the symbol using a machine learning model
-    def classify_symbol(self, model, classification_dict, webcam_img):
-        #detemine dimensions of webcam image
+    def __init__(self, x, y, w, h, webcam_img):
         webcam_img_height = webcam_img.shape[0]
         webcam_img_width = webcam_img.shape[1]
+        PADDING = 4
 
-        #create a padding that is a quarter of the largest dimension of the bounding box
-        if (self.h > self.w):
-            padding = self.h//4
+        #adds a small padding of 4 pixels to each bounding box
+        self.x = x - PADDING
+        self.y = y - PADDING
+        self.w = w + PADDING * 2
+        self.h = h + PADDING * 2
+
+        if self.x < 0:
+            self.x = 0
+        if self.y < 0:
+            self.y = 0
+        if self.x + self.w > webcam_img_width:
+            self.w = webcam_img_width - self.x
+        if self.y + self.h > webcam_img_height:
+            self.h = webcam_img_height - self.y
+        
+        self.classification = None
+
+    #processes an image of the symbol from the webcam image and classifies the symbol using a machine learning model
+    def classify_symbol(self, model, classification_dict, webcam_img):
+
+        #crop boundaries
+        left_bound = self.x
+        right_bound = self.x + self.w
+        top_bound = self.y
+        bottom_bound = self.y + self.h
+
+        #crop image
+        img_cropped = webcam_img[top_bound:bottom_bound, left_bound:right_bound]
+        img_gray = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2GRAY)
+        _, img_processed = cv2.threshold(img_gray, 80, 255, cv2.THRESH_BINARY)
+
+        #creates a padding of white pixels for the larger dimension that is 1/4 of it
+        #pads the lesser dimension white such that the resulting image is squared
+        if self.h > self.w:
+            padding_top = self.h//4
+            padding_side = (self.h + padding_top * 2 - self.w)//2
         else:
-            padding = self.w//4
+            padding_side = self.w//4
+            padding_top = (self.w + padding_side * 2 - self.h)//2
 
-        #apply padding to each side
-        left_bound = self.x - padding
-        right_bound = self.x + self.w + padding
-        top_bound = self.y - padding
-        bottom_bound = self.y + self.h + padding
-
-        #determine the difference between width and height
-        width = right_bound - left_bound
-        height = bottom_bound - top_bound
-        dim_difference = abs(width - height)
-
-        #use the dimensional difference to square the image (expand smaller dimensions to equal the larger one)
-        if (width > height):
-            top_bound -= dim_difference//2
-            bottom_bound += dim_difference//2
-        else:
-            left_bound -= dim_difference//2
-            right_bound += dim_difference//2
-
-        #fixes processed bounds if they exceed the range of the webcam image
-        if (left_bound < 0):
-            left_bound = 0
-        if (right_bound >= webcam_img_width):
-            right_bound = webcam_img_width - 1
-        if (top_bound < 0):
-            top_bound = 0
-        if (bottom_bound > webcam_img_height):
-            bottom_bound = webcam_img_height - 1
-
-        #take image of symbol from webcam image using bounds
-        img = webcam_img[top_bound:bottom_bound, left_bound:right_bound]
+        #apppends padding on top and bottom of the image
+        padding = np.array([[255]*self.w]*padding_top, dtype=np.float32)
+        img_padded = np.append(padding, img_processed, axis=0)
+        img_padded = np.append(img_padded, padding, axis=0)
+        
+        #apppends padding on sides of the image
+        padding = np.array([[255]*padding_side]*(self.h + padding_top * 2), dtype=np.float32)
+        img_padded = np.append(padding, img_padded, axis=1)
+        img_padded = np.append(img_padded, padding, axis=1)
 
         #preprocessing the image to input to the model
-        img_processed = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, img_processed = cv2.threshold(img_processed, 80, 255, cv2.THRESH_BINARY)
-        img_processed = cv2.resize(img_processed, (100,100))
+        img_processed = cv2.resize(img_padded, (100,100))
         img_processed = np.expand_dims(img_processed, axis = 2)
         img_processed = np.reshape(img_processed, (1, 100, 100, 1))
         img_processed = img_processed/255

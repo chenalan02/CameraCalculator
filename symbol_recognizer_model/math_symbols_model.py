@@ -1,15 +1,9 @@
 import tensorflow as tf
 import numpy as np
-import pandas as pd
-import cv2
 import matplotlib.pyplot as plt
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import itertools
 from confusionmatrix import plot_confusion_matrix
 from sklearn.metrics import confusion_matrix
-
-from tensorflow.keras.layers import Dense, Input, Conv2D, BatchNormalization, MaxPool2D, Flatten, GlobalMaxPool2D
-from tensorflow.keras.models import Model
 
 CATEGORIES = {'0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'add': 10, 'dec': 11, 'div': 12, 'mul': 13, 'sub': 14}
 

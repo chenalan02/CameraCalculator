@@ -17,7 +17,7 @@ Accuracy          |  Loss
 
 ![Confusion Matrix](https://github.com/chenalan02/CameraCalculator/blob/main/Readme%20Images/confusion%20matrix.png)
 
-The confusion matrix shows common incorrect identifications between numbers such as 2 and 3, 6 and 8, division and subtraction etc. During the implementation of the camera calculator these misidentifications occasionally occured.
+The confusion matrix shows common incorrect identifications between numbers such as 2 and 3, 6 and 8, division and subtraction etc. During the implementation of the camera calculator, these misidentifications occasionally occured. This largely improved when the symbol classification was improved by only cropping the bounding box of each symbol, then appending white pixels to square the image. The previous version directly cropped a squared image, which resulting in noise from other symbols on the page.
 
 ## Camera Calculator Documentation
 The Camera Calculator was implemented using objects to represent each symbol and a calculator class to handle the operation of the calculator as a whole.
@@ -87,6 +87,6 @@ The Camera Calculator was implemented using objects to represent each symbol and
 * draw the bounding boxes, and classification/answer if applicable, to the webcam image
 
 ## Limitation and Future Improvements
-The Camera Calculator sometimes struggles to classify symbols when they are close to each other. This is due to the fact that the recognizer model is fed a cropped squared image with a small scaled padding to avoid distortions when resizing. As a result, there is sometimes noise from neighboring symbols which the model does not handle well. A solution could be to retrain the model with images with added noise. Another solution could be retrain the model using generated images with large distortions. This was, we can avoid squaring the image and simple take the bounding box of the symbol and resize it without worrying about the model not being able to recognize distorted images.
-
 When the calculator performs a calculation, there is a slight lag in the program of about half a second since the calculator has to classify all images during that frame. I probably did not need such a large CNN for recognizing symbols and could have decreased the number of parameters and layers to achieve quicker performance.
+
+Should also add bedmas rules
